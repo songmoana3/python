@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 import os
 
 '''
@@ -11,10 +12,13 @@ csv파일의 원하는 column 의 값을 가져와서 교집합, 합집합 알�
 3. Numpy 끼리 비교
 4. 비교값 DF 로 만들기 (Column 명 : applicationNumber)
 '''
+logging.basicConfig(level=logging.INFO)
+
 
 class ResultValue:
 
     def __init__(self, file_paths: list, column_name: str):
+        
         self.file_paths = file_paths
         self.column_name = column_name
         
@@ -50,35 +54,48 @@ class ResultValue:
         return self.result_df
 
     def main(self, method = None):
-        
-        np_list = []
-        
-        for file_name in self.file_paths:
-            self.get_df(file_name)
-            series = self.get_series()
-            np_array = self.change_array(series)
-            np_list.append(np_array)
-    
-        self.np_first, self.np_second = np_list[0], np_list[1]
-    
-        if method == 1:
-            self.get_difference()
 
-        elif method == 2:
-            self.get_intersection()
+        try:
+            np_list = []
 
-        elif method == 3:
-            self.get_intersection()    
-            self.create_result_df()
-            self.get_difference()
+            for file_name in self.file_paths:
+                self.get_df(file_name)
+                series = self.get_series()
+                np_array = self.change_array(series)
+                np_list.append(np_array)
+
+            self.np_first, self.np_second = np_list[0], np_list[1]
+
+            if method == 1:
+                self.get_difference()
+
+            elif method == 2:
+                self.get_intersection()
+
+            elif method == 3:
+                self.get_intersection()    
+                self.create_result_df()
+                self.get_difference()
+
+            else:
+                raise ValueError
+
+            self.create_result_df()  
             
-        self.create_result_df()
-            
+        except Exception as e:
+            logging.error(e)
 
 if __name__=='__main__':
+    
+    
     base_root = '/datacore/airflow_kipris/appnum'
-    print('기본 경로 >> ', base_root)
+    print(f'BASE_ROOT :: {base_root}')
     method = int(input('CHOOSE :: 1. Difference (차집합), 2.Intersection (교집합) 3. Both (둘 다)? : '))
+    
+    if method not in [1,2,3]:
+        print('ERROR :: WrongNumber! Plz Choose between 1 and 3.')
+        raise ValueError
+    
     file_name = str(input('파일 1의 경로 : '))
     file_name2 = str(input('파일 2의 경로 : '))
     file_list = [os.path.join(base_root,file_name), os.path.join(base_root, file_name2)]
